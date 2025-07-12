@@ -1,0 +1,1 @@
+Per pushare manualmente al artifact registry usare il gcloudpush.sh

@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.JWT_SECRET = exports.GOOGLE_LOCATION = exports.GOOGLE_SHARED_USER_BUCKET = exports.GOOGLE_PUBSUB_TOPIC = exports.GOOGLE_PROJECT_ID = exports.COOKIE_KEY = exports.GOOGLE_CLIENT_SECRET = exports.GOOGLE_CLIENT_ID = void 0;
+exports.GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+exports.GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+exports.COOKIE_KEY = process.env.COOKIE_KEY;
+exports.GOOGLE_PROJECT_ID = process.env.GOOGLE_PROJECT_ID;
+exports.GOOGLE_PUBSUB_TOPIC = process.env.GOOGLE_PUBSUB_TOPIC;
+exports.GOOGLE_SHARED_USER_BUCKET = process.env.GOOGLE_SHARED_USER_BUCKET;
+exports.GOOGLE_LOCATION = process.env.GOOGLE_LOCATION;
+exports.JWT_SECRET = process.env.JWT_SECRET;

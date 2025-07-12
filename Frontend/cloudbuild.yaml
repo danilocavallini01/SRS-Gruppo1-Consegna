@@ -1,0 +1,60 @@
+#steps:
+#  - name: 'gcr.io/cloud-builders/docker'
+#    args: [
+#      'build',
+#      '-t',
+#      'europe-west12-docker.pkg.dev/$PROJECT_ID/gruppo1-repository/frontend-app',
+#      '.'
+#    ]
+#  - name: 'gcr.io/cloud-builders/docker'
+#    args: [
+#      'push',
+#      'europe-west12-docker.pkg.dev/$PROJECT_ID/gruppo1-repository/frontend-app'
+#    ]
+
+#options:
+#  logging: CLOUD_LOGGING_ONLY
+
+#images:
+#  - 'europe-west12-docker.pkg.dev/$PROJECT_ID/gruppo1-repository/frontend-app'
+steps:
+  - name: 'node:18'
+    entrypoint: 'bash'
+    args:
+      - -c
+      - |
+        echo "Installing dependencies..."
+        npm ci
+
+        echo "Running frontend tests..."
+        npm run test
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'build',
+        '-t',
+        'europe-west12-docker.pkg.dev/$PROJECT_ID/gruppo1-repository/frontend-app',
+        '.'
+      ]
+
+  - name: 'ghcr.io/aquasecurity/trivy'
+    entrypoint: 'trivy'
+    args:
+      - 'image'
+      - '--severity'
+      - 'HIGH,CRITICAL'
+      - 'europe-west12-docker.pkg.dev/$PROJECT_ID/gruppo1-repository/frontend-app'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'push',
+        'europe-west12-docker.pkg.dev/$PROJECT_ID/gruppo1-repository/frontend-app'
+      ]
+
+images:
+  - 'europe-west12-docker.pkg.dev/$PROJECT_ID/gruppo1-repository/frontend-app'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

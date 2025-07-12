@@ -1,0 +1,60 @@
+#steps:
+#  - name: 'gcr.io/cloud-builders/docker'
+#    args: [
+#      'build',
+#      '-t',
+#      'europe-west12-docker.pkg.dev/$PROJECT_ID/gruppo1-repository/backend-image',
+#      '.'
+#    ]
+#  - name: 'gcr.io/cloud-builders/docker'
+#    args: [
+#      'push',
+#      'europe-west12-docker.pkg.dev/$PROJECT_ID/gruppo1-repository/backend-image'
+#    ]
+
+#options:
+#  logging: CLOUD_LOGGING_ONLY
+
+#images:
+#  - 'europe-west12-docker.pkg.dev/$PROJECT_ID/gruppo1-repository/backend-image'
+steps:
+  - name: 'node:18'
+    entrypoint: 'bash'
+    args:
+      - -c
+      - |
+        echo "Installing dependencies..."
+        npm ci
+
+        echo "Running tests..."
+        npm test
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'build',
+        '-t',
+        'europe-west12-docker.pkg.dev/$PROJECT_ID/gruppo1-repository/backend-app',
+        '.'
+      ]
+
+  - name: 'ghcr.io/aquasecurity/trivy'
+    entrypoint: 'trivy'
+    args:
+      - 'image'
+      - '--severity'
+      - 'HIGH,CRITICAL'
+      - 'europe-west12-docker.pkg.dev/$PROJECT_ID/gruppo1-repository/backend-app'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'push',
+        'europe-west12-docker.pkg.dev/$PROJECT_ID/gruppo1-repository/backend-app'
+      ]
+
+images:
+  - 'europe-west12-docker.pkg.dev/$PROJECT_ID/gruppo1-repository/backend-app'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
