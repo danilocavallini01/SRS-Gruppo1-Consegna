@@ -19,7 +19,7 @@ resource "google_cloud_run_v2_service" "backend" {
   count                = var.cloud_run_on ? 1 : 0
   name                 = "node-backend"
   location             = var.region
-  ingress              = "INGRESS_TRAFFIC_INTERNAL_ONLY"
+  ingress              = "INGRESS_TRAFFIC_ALL"
   invoker_iam_disabled = true
   deletion_protection  = false
 
@@ -73,7 +73,7 @@ resource "google_cloud_run_v2_service" "backend" {
   }
 
   depends_on = [
-    google_pubsub_topic.llm_requests,
+    google_pubsub_topic.default,
     google_vpc_access_connector.default
   ]
 }
@@ -85,7 +85,7 @@ resource "google_cloud_run_v2_service" "frontend" {
   count                = var.cloud_run_on ? 1 : 0
   name                 = "react-frontend"
   location             = var.region
-  ingress              = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
+  ingress              = "INGRESS_TRAFFIC_ALL"
   invoker_iam_disabled = true
   deletion_protection  = false
 
@@ -182,15 +182,37 @@ resource "google_compute_router_nat" "nat" {
 
 # Frontend LOAD BALANCER
 # A Backend Service defines a group of virtual machines that will serve traffic for load balancing
-resource "google_compute_backend_service" "default" {
+resource "google_compute_region_backend_service" "default" {
   count                 = var.cloud_run_on ? 1 : 0
-  name                  = "frontend-backend"
-  load_balancing_scheme = "EXTERNAL"
+  name                  = "frontend-backend-service"
+  load_balancing_scheme = "EXTERNAL_MANAGED"
+  health_checks         = [google_compute_health_check.default.id]
   protocol              = "HTTPS"
-  enable_cdn            = false
+  enable_cdn            = true
+
+  cdn_policy {
+    cache_mode                   = "CACHE_ALL_STATIC"
+    default_ttl                  = 3600
+    client_ttl                   = 7200
+    max_ttl                      = 10800
+    negative_caching             = true
+    signed_url_cache_max_age_sec = 7200
+  }
 
   backend {
     group = google_compute_region_network_endpoint_group.default[0].id
+    capacity_scaler = 1
+  }
+}
+
+resource "google_compute_health_check" "default" {
+  name = "https-health-check"
+
+  timeout_sec        = 1
+  check_interval_sec = 1
+
+  https_health_check {
+    port = "443"
   }
 }
 
@@ -199,7 +221,7 @@ resource "google_compute_backend_service" "default" {
 resource "google_compute_url_map" "default" {
   count           = var.cloud_run_on ? 1 : 0
   name            = "frontend-url-map"
-  default_service = google_compute_backend_service.default[0].id
+  default_service = google_compute_region_backend_service.default[0].id
 }
 
 resource "google_compute_target_https_proxy" "default" {

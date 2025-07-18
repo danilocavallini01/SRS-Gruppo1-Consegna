@@ -26,8 +26,8 @@ export const generativeModel = vertexAI.getGenerativeModel({
                     Each script must begin with the following content: 
                     terraform {
                       backend "gcs" {
-                        bucket  = "\${GOOGLE_SHARED_USER_BUCKET}"
-                        prefix  = "\${email}/\${folderId}"
+                        bucket  = "!!!!GOOGLE_SHARED_USER_BUCKET"
+                        prefix  = "!!!!EMAIL/!!!!FOLDERID"
                       }
                     }
                     The email and folderId variables will be replaced by the user, the script must be valid and executable.`}],

@@ -93,6 +93,7 @@ export const destroy = async (email: string, folderId: number) => {
 
     output.push("==== TERRAFORM DESTROY ====")
     await runCommand('terraform init -migrate-state -no-color', DOWNLOAD_PATH)
+    await runCommand('terraform apply -no-color -auto-approve', DOWNLOAD_PATH)
     output.push(await runCommand('terraform destroy -no-color -auto-approve', DOWNLOAD_PATH))
     console.log("Finished doing the apply")
 

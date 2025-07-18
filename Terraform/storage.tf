@@ -1,5 +1,5 @@
 resource "google_storage_bucket" "default" {
-  count         = var.storage_on ? 1 : 0
+  count         = var.storage_on ? 0 : 0
   name          = var.user_shared_folder
   location      = var.region
   force_destroy = true
@@ -8,7 +8,7 @@ resource "google_storage_bucket" "default" {
 }
 
 resource "google_firestore_database" "default" {
-  count                   = var.storage_on ? 1 : 0
+  count                   = var.storage_on ? 0 : 0
   project                 = var.project_id
   name                    = "(default)"
   location_id             = var.region

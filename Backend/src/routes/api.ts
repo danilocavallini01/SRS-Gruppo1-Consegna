@@ -5,7 +5,7 @@ import { AuthenticatedRequest, authenticateJWT } from '../middleware/authMiddlew
 import { deleteFiles, uploadTerraform } from '../terraform/bucket';
 import { apply, destroy, plan } from '../terraform/run';
 import { getLoggedChat, logChat } from '../logging/manager';
-import { DUMMY } from '../../secrets';
+import { DUMMY, GOOGLE_SHARED_USER_BUCKET } from '../../secrets';
 import { estimateAppliedCosts } from '../pricing';
 import { set } from 'mongoose';
 
@@ -22,17 +22,17 @@ export interface AiAnswer {
 
 
 // POST /api/costs
-apiRouter.post("/costs",authenticateJWT, async (req: Request, res: Response): Promise<any> => {
- console.log("Calculating costs from terraform apply state...");
-  const {folderId } = req.body;
-    try {
-        const user = (req as any).user.email;
-        const result = await estimateAppliedCosts(user,folderId);
-        res.status(200).json(result);
-    } catch (err) {
-        console.error("Error calculating applied costs:", err);
-        res.status(500).json({ error: "Failed to calculate costs" });
-    }
+apiRouter.post("/costs", authenticateJWT, async (req: Request, res: Response): Promise<any> => {
+  console.log("Calculating costs from terraform apply state...");
+  const { folderId } = req.body;
+  try {
+    const user = (req as any).user.email;
+    const result = await estimateAppliedCosts(user, folderId);
+    res.status(200).json(result);
+  } catch (err) {
+    console.error("Error calculating applied costs:", err);
+    res.status(500).json({ error: "Failed to calculate costs" });
+  }
 });
 
 
@@ -151,10 +151,10 @@ apiRouter.post('/confirm', authenticateJWT, async (req: AuthenticatedRequest, re
 export default apiRouter;
 
 function delay(time: number): Promise<void> {
-   // Returns a promise that resolves after the specified time in milliseconds
-   return new Promise(function(resolve) { 
-       setTimeout(resolve, time)
-   });
+  // Returns a promise that resolves after the specified time in milliseconds
+  return new Promise(function (resolve) {
+    setTimeout(resolve, time)
+  });
 }
 
 const computeAiAnswer = async (message: string, email: string): Promise<AiAnswer> => {
@@ -174,8 +174,11 @@ const computeAiAnswer = async (message: string, email: string): Promise<AiAnswer
     const result = await generativeModel.generateContent(request);
     console.log('Response json stringify: ', JSON.stringify(result.response));
 
-    const tfFile = extractCodeContent(result.response.candidates[0].content.parts[0].text);
+    let tfFile = extractCodeContent(result.response.candidates[0].content.parts[0].text);
     console.log('TfFile', tfFile);
+    tfFile = tfFile!.replace("!!!!GOOGLE_SHARED_USER_BUCKET", GOOGLE_SHARED_USER_BUCKET)
+    tfFile = tfFile!.replace("!!!!EMAIL", email)
+    tfFile = tfFile!.replace("!!!!FOLDERID", folderId.toString())
     return { response: tfFile ? tfFile : "No code generated there was a mistake in the generation process", folderId: folderId };
   }
 }
